@@ -3,12 +3,14 @@
 ```text
 webamp/
 ├── index.html
-├── style.css
-├── script.js
 ├── canciones/
 │   ├── cancion1.mp3
 │   ├── cancion2.mp3
 │   └── cancion3.mp3
+├── skins/
+├── ├── skin1.wsz
+├── ├── skin2.wsz
+│   └── skin3.wsz
 ├── imagenes/
 │   ├── icon.jpg
 │   └── fondo.jpg
