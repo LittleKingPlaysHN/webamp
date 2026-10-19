@@ -88,7 +88,7 @@
 
     async function detectarSkinsFolder() {
       try {
-        const response = await fetch("skins/");
+        const response = await fetch("./skins/");
         const html = await response.text();
         const doc = new DOMParser().parseFromString(html, "text/html");
         const enlaces = doc.querySelectorAll("a");
