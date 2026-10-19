@@ -27,4 +27,5 @@ Proyecto personal y educativo. Utiliza únicamente canciones, imágenes y recurs
 
 # Vista Previa
 
-![Vista previa del reproductor](galeria/1.PNG)
+![Vista previa del reproductor](galeria/1.JPG)
+![Vista previa del reproductor](galeria/2.JPG)
