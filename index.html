@@ -113,7 +113,7 @@
 
     async function detectarCanciones() {
       try {
-        const response = await fetch("musica/");
+        const response = await fetch("./musica/");
         const html = await response.text();
 
         const doc = new DOMParser().parseFromString(html, "text/html");
