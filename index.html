@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Webamp - Clasicos Del Reggueton</title>
+  <link rel="icon" type="image/png" href="./galeria/icon.png" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+
+      background-image: url('./galeria/fondo.jfif');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-color: #0a0a0a;
+      font-family: sans-serif;
+    }
+
+    #app {
+      width: 100%;
+      height: 100vh;
+      position: relative;
+    }
+
+    #skin-selector-container {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      z-index: 99999;
+      background: rgba(0, 0, 0, 0.75);
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #skin-selector-container label {
+      color: #fff;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    #skin-select {
+      background: #222;
+      color: #fff;
+      border: 1px solid #444;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    #skin-select:hover {
+      border-color: #666;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="skin-selector-container">
+    <label for="skin-select">Skin:</label>
+    <select id="skin-select">
+      <option value="">Cargando skins...</option>
+    </select>
+  </div>
+
+  <div id="app"></div>
+
+  <script type="module">
+
+    import Webamp from "https://unpkg.com/webamp@^2/butterchurn";
+
+    async function detectarSkinsFolder() {
+      try {
+        const response = await fetch("skins/");
+        const html = await response.text();
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        const enlaces = doc.querySelectorAll("a");
+
+        const skins = [];
+        enlaces.forEach((enlace) => {
+          const href = enlace.getAttribute("href");
+          if (href && href.toLowerCase().endsWith(".wsz")) {
+            const nombreArchivo = decodeURIComponent(href.split("/").pop());
+            skins.push({
+              nombre: nombreArchivo.replace(/\.wsz$/i, ""),
+              url: `skins/${encodeURIComponent(nombreArchivo)}`
+            });
+          }
+        });
+        return skins;
+      } catch (error) {
+        console.error("Error al escanear la carpeta /skins:", error);
+        return [];
+      }
+    }
+
+    async function detectarCanciones() {
+      try {
+        const response = await fetch("musica/");
+        const html = await response.text();
+
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        const enlaces = doc.querySelectorAll("a");
+
+        const tracks = [];
+        enlaces.forEach((enlace) => {
+          const href = enlace.getAttribute("href");
+          if (href && href.toLowerCase().endsWith(".mp3")) {
+            const nombreArchivo = decodeURIComponent(href.split("/").pop());
+            const titulo = nombreArchivo.replace(/\.mp3$/i, "");
+
+            tracks.push({
+              metaData: { title: titulo },
+              url: `musica/${encodeURIComponent(nombreArchivo)}`,
+            });
+          }
+        });
+
+        if (tracks.length === 0) {
+          console.warn("No se encontraron MP3 en la carpeta musica/.");
+        }
+        return tracks;
+      } catch (error) {
+        console.error("Error al escanear la carpeta de música:", error);
+        return [];
+      }
+    }
+
+    async function iniciar() {
+      const tracks = await detectarCanciones();
+      const skinsDisponibles = await detectarSkinsFolder();
+
+      const selectElement = document.getElementById("skin-select");
+      selectElement.innerHTML = "";
+
+    
+      let skinInicial = null;
+      if (skinsDisponibles.length > 0) {
+        skinInicial = skinsDisponibles[0].url;
+        skinsDisponibles.forEach((s) => {
+          const opt = document.createElement("option");
+          opt.value = s.url;
+          opt.textContent = s.nombre;
+          selectElement.appendChild(opt);
+        });
+      } else {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "Sin skins en /skins";
+        selectElement.appendChild(opt);
+      }
+
+      const webamp = new Webamp({
+        initialTracks: tracks,
+        ...(skinInicial ? { initialSkin: { url: skinInicial } } : {}),
+
+        windowLayout: {
+          main: { position: { top: 0, left: 0 } },
+          equalizer: { position: { top: 116, left: 0 } },
+          playlist: {
+            position: { top: 232, left: 0 },
+            size: { extraHeight: 4, extraWidth: 0 },
+          },
+          milkdrop: {
+            position: { top: 0, left: 275 },
+            size: { extraHeight: 12, extraWidth: 7 },
+          },
+        },
+      });
+
+      webamp.renderInto(document.getElementById("app"));
+
+      selectElement.addEventListener("change", async (e) => {
+        const nuevaUrlSkin = e.target.value;
+        if (nuevaUrlSkin) {
+          try {
+            await webamp.setSkinFromUrl(nuevaUrlSkin);
+          } catch (err) {
+            console.error("No se pudo cargar la skin:", err);
+          }
+        }
+      });
+    }
+
+    iniciar();
+  </script>
+</body>
+</html>
